@@ -72,6 +72,11 @@ public class EmptyRestRequestWithBody implements RestRequestWithBody {
 		throw new QuickRestException("Method "+this.method+" not implemented yet");
 	}
 
+	@Override
+	public RestRequestWithBody exceptionOnFail(boolean exceptionOnFail) {
+		return this;
+	}
+
 	
 
 }

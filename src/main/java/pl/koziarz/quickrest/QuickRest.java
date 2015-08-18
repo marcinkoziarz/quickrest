@@ -4,7 +4,7 @@ import pl.koziarz.quickrest.httpclient.HttpClientRequestFactory;
 
 public class QuickRest {
 	
-	QuickRestRequestFactory factory;
+	private QuickRestRequestFactory factory;
 	
 	/**
 	 * Default constructor for QuickRest instance

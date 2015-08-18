@@ -3,6 +3,12 @@ package pl.koziarz.quickrest;
 import org.json.JSONObject;
 
 public interface RestRequestWithBody extends RestRequest {
+	/**
+	 * Set request body element to given value
+	 * @param name key of body element
+	 * @param value value of body element
+	 * @return current request
+	 */
 	public RestRequestWithBody field(String name, String value);
 
 	/* from RestRequest */
@@ -12,4 +18,5 @@ public interface RestRequestWithBody extends RestRequest {
 	public RestRequestWithBody onFail(RestResponseHandler handler);
 	public RestRequestWithBody query(String key, String value);
 	public RestRequestWithBody pathParam(String key, String value);
+	public RestRequestWithBody exceptionOnFail(boolean exceptionOnFail);
 }

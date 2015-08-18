@@ -1,5 +1,9 @@
 package pl.koziarz.quickrest;
 
+/**
+ * Adapter class for creating {@link QuickRestRequestFactory}.
+ * By default, methods return empty requests that throw exception when tried to be executed.
+ */
 public class QuickRestRequestFactoryAdapter implements QuickRestRequestFactory {
 
 	@Override

@@ -48,6 +48,7 @@ class RestRequestImpl extends RestRequestWithBodyAbstract {
 	private HashMap<String,Object> fields = new HashMap<>();
 	private HashMap<String,Object> query = new HashMap<>();
 	private HashMap<String,String> pathParam = new HashMap<>();
+	private boolean exceptionOnFail;
 	
 	private int expectedStatus=200;
 	private RestResponseHandler onSuccess=null;
@@ -237,15 +238,28 @@ class RestRequestImpl extends RestRequestWithBodyAbstract {
 			
 			RestResponse<String> response = new RestResponseImpl<String>(strResp, resp.getStatusLine().getStatusCode(), resp.getStatusLine().getReasonPhrase());
 			
-			if( resp.getStatusLine().getStatusCode() == expectedStatus ) {
-				return response;
+			if( resp.getStatusLine().getStatusCode() != expectedStatus && exceptionOnFail ) {
+				if( onFailure != null )
+					onFailure.onResponse(response);
+				
+				QuickRestException e = new QuickRestException("Received HTTP Status "+resp.getStatusLine().getStatusCode()+". Expected "+expectedStatus);
+				log.error(e);
+				throw e;
 			}
-			QuickRestException e = new QuickRestException("Received HTTP Status "+resp.getStatusLine().getStatusCode()+". Expected "+expectedStatus);
-			log.error(e);
-			throw e;
+			
+			if( onSuccess != null )
+				onSuccess.onResponse(response);
+			
+			return response;
 		} catch (IOException e) {
 			throw new QuickRestException(e);
 		}
+	}
+
+	@Override
+	public RestRequestWithBody exceptionOnFail(boolean exceptionOnFail) {
+		this.exceptionOnFail=exceptionOnFail;
+		return this;
 	}
 	
 }

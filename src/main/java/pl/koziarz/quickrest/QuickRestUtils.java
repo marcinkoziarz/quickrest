@@ -2,7 +2,6 @@ package pl.koziarz.quickrest;
 
 /**
  * Some simple utility methods used in QuickRest
- * @author Marcin Koziarz <marcin@koziarz.pl>
  */
 public class QuickRestUtils {
 	
@@ -18,8 +17,8 @@ public class QuickRestUtils {
 	 * abbreviate("abcdefghij",  5, null);  // returns "abcde"
 	 * 
 	 * @param str string to be limited
-	 * @param maxlen 
-	 * @param appendIfLimit
+	 * @param maxlen max length of resulting string
+	 * @param appendIfLimit string to be appended if string is limited
 	 * @return string with length not greater than maxlen with last few characters replaced with appendIfLimit
 	 */
 	public static String abbreviate(String str, int maxlen, String appendIfLimit) {
