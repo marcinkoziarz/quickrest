@@ -123,10 +123,4 @@ public interface RestRequest {
 	 */
 	public <T> T asObject(Class<T> class1) throws QuickRestException;
 	
-	/**
-	 * 
-	 * @return
-	 * @throws QuickRestException
-	 */
-	public JSONObject asJson() throws QuickRestException;
 }

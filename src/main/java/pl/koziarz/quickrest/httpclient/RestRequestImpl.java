@@ -22,6 +22,7 @@ import org.apache.http.client.methods.HttpUriRequest;
 import org.apache.http.message.BasicNameValuePair;
 import org.apache.logging.log4j.LogManager;
 import org.apache.logging.log4j.Logger;
+import org.json.JSONArray;
 import org.json.JSONException;
 import org.json.JSONObject;
 
@@ -146,7 +147,6 @@ class RestRequestImpl extends RestRequestWithBodyAbstract {
 			e = new UrlEncodedFormEntity(nvp,"UTF-8");
 			return e;
 		} catch (UnsupportedEncodingException e1) {
-			// TODO Auto-generated catch block
 			throw new QuickRestException(e1);
 		}
 	}
@@ -169,15 +169,14 @@ class RestRequestImpl extends RestRequestWithBodyAbstract {
 	 * @param replacements
 	 * @return
 	 */
-	private static String replaceTokens(String text,
-			Map<String, String> replacements) {
+	private static String replaceTokens(String text, Map<String, String> replacements) {
 		Pattern pattern = Pattern.compile("\\{(.+?)\\}");
 		Matcher matcher = pattern.matcher(text);
 		StringBuffer buffer = new StringBuffer();
 		while (matcher.find()) {
 			String replacement = replacements.get(matcher.group(1));
 			if (replacement != null) {
-//				matcher.appendReplacement(buffer, replacement);
+				// matcher.appendReplacement(buffer, replacement);
 				// see comment 
 				matcher.appendReplacement(buffer, "");
 				buffer.append(replacement);
@@ -189,21 +188,16 @@ class RestRequestImpl extends RestRequestWithBodyAbstract {
 
 	@Override
 	public <T> T asObject(Class<T> clazz) throws QuickRestException {
-		ObjectMapper objectMapper = new ObjectMapper();
-		try {
-			return objectMapper.readValue(asString(), clazz);
-		} catch (IOException e) {
-			throw new QuickRestException(e);
+		if( clazz == String.class ) {
+			return (T) asString();
 		}
-	}
-
-	@Override
-	public JSONObject asJson() throws QuickRestException {
-		try {
-			return new JSONObject(asString());
-		} catch (JSONException e) {
-			throw new QuickRestException("Cannot map response to JSON",e);
+		if( clazz == JSONArray.class ) {
+			return (T) new JSONArray(asString());
 		}
+		if( clazz == JSONObject.class ) {
+			return (T) new JSONObject(asString());
+		}
+		throw new QuickRestException("No mapper found for class "+clazz);
 	}
 
 	public String asString() throws QuickRestException {
@@ -212,7 +206,7 @@ class RestRequestImpl extends RestRequestWithBodyAbstract {
 	
 	@Override
 	public <T> RestResponse<T> asResponse(Class<T> contentType) {
-		// map 
+		// map object
 		return null;
 	}
 

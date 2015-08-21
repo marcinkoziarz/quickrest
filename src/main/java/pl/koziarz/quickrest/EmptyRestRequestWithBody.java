@@ -22,11 +22,6 @@ public class EmptyRestRequestWithBody implements RestRequestWithBody {
 	}
 
 	@Override
-	public JSONObject asJson() throws QuickRestException {
-		throw new QuickRestException("Method "+this.method+" not implemented yet");
-	}
-
-	@Override
 	public RestRequestWithBody field(String name, String value) {
 		return this;
 	}

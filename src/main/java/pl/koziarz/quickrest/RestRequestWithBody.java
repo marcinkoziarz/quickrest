@@ -1,7 +1,5 @@
 package pl.koziarz.quickrest;
 
-import org.json.JSONObject;
-
 public interface RestRequestWithBody extends RestRequest {
 	/**
 	 * Set request body element to given value
