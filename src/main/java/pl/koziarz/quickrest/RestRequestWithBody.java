@@ -8,9 +8,12 @@ public interface RestRequestWithBody extends RestRequest {
 	 * @return current request
 	 */
 	public RestRequestWithBody field(String name, String value);
-
+	public RestRequestWithBody entity(Entity entity);
+	
+	
 	/* from RestRequest */
 	public RestRequestWithBody header(String header, String value);
+	public RestRequestWithBody header(String header, String value, boolean condition);
 	public RestRequestWithBody expectResponseStatus(int expectedStatus);
 	public RestRequestWithBody onSuccess(RestResponseHandler handler);
 	public RestRequestWithBody onFail(RestResponseHandler handler);

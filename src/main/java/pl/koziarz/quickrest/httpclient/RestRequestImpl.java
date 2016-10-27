@@ -1,7 +1,9 @@
 package pl.koziarz.quickrest.httpclient;
 
+import java.io.ByteArrayOutputStream;
 import java.io.IOException;
 import java.io.UnsupportedEncodingException;
+import java.nio.charset.Charset;
 import java.util.ArrayList;
 import java.util.HashMap;
 import java.util.Map;
@@ -19,6 +21,7 @@ import org.apache.http.client.methods.HttpGet;
 import org.apache.http.client.methods.HttpPost;
 import org.apache.http.client.methods.HttpPut;
 import org.apache.http.client.methods.HttpUriRequest;
+import org.apache.http.entity.ByteArrayEntity;
 import org.apache.http.message.BasicNameValuePair;
 import org.apache.logging.log4j.LogManager;
 import org.apache.logging.log4j.Logger;
@@ -29,6 +32,8 @@ import org.json.JSONObject;
 import com.fasterxml.jackson.core.JsonProcessingException;
 import com.fasterxml.jackson.databind.ObjectMapper;
 
+import pl.koziarz.quickrest.Entity;
+import pl.koziarz.quickrest.Header;
 import pl.koziarz.quickrest.HttpMethod;
 import pl.koziarz.quickrest.QuickRestException;
 import pl.koziarz.quickrest.QuickRestUtils;
@@ -54,6 +59,8 @@ class RestRequestImpl extends RestRequestWithBodyAbstract {
 	private int expectedStatus=200;
 	private RestResponseHandler onSuccess=null;
 	private RestResponseHandler onFailure=null;
+
+	private Entity entity=null;
 	
 	public RestRequestImpl(HttpMethod method, String url, HttpClient client) {
 		this.method=method;
@@ -107,7 +114,7 @@ class RestRequestImpl extends RestRequestWithBodyAbstract {
 		switch(method) {
 		case POST:
 			HttpPost post = new HttpPost(url);
-			post.setEntity(createURLEncodedEntity(fields));
+			post.setEntity(createEntity(fields));
 			return post;
 		case GET:
 			try {
@@ -118,13 +125,31 @@ class RestRequestImpl extends RestRequestWithBodyAbstract {
 			}
 		case PUT:
 			HttpPut put = new HttpPut(url);
-			put.setEntity(createURLEncodedEntity(fields));
+			put.setEntity(createEntity(fields));
 			return put;
 		default:
 			throw new QuickRestException("Unsupported method: "+method);
 		}
 	}
 
+	private HttpEntity createEntity(HashMap<String,Object> map) throws QuickRestException {
+		try {
+			if( this.entity != null ) {
+				ByteArrayOutputStream os = new ByteArrayOutputStream();
+				entity.write(os);
+				os.close();
+				//String str = new String(os.toByteArray(),Charset.forName("UTF-8"));
+				//org.apache.http.entity.StringEntity e = new org.apache.http.entity.StringEntity(str, Charset.forName("UTF-8"));
+				org.apache.http.entity.ByteArrayEntity e = new ByteArrayEntity(os.toByteArray());
+				return e;
+			} else {
+				return createURLEncodedEntity(map);
+			}
+		} catch(IOException ioe) {
+			throw new QuickRestException(ioe);
+		}
+	}
+	
 	private HttpEntity createURLEncodedEntity(HashMap<String,Object> map) throws QuickRestException {
 		ArrayList<BasicNameValuePair> nvp = new ArrayList<>();
 		for( Entry<String,Object> e : map.entrySet() ) {
@@ -213,6 +238,15 @@ class RestRequestImpl extends RestRequestWithBodyAbstract {
 	@Override
 	public RestResponse<String> asResponse() throws QuickRestException {
 		HttpUriRequest req = createRequest();
+		
+		// append entity headers, if not already set
+		if( entity != null ) {
+			for( Header h : entity.getHeaders() ) {
+				if( !headers.containsKey(h.getName()) )
+					headers.put(h.getName(), h.getValue());
+			}
+		}
+
 		for(Entry<String,String> h : headers.entrySet()) {
 			req.addHeader(h.getKey(), h.getValue());
 		}
@@ -221,7 +255,7 @@ class RestRequestImpl extends RestRequestWithBodyAbstract {
 		
 		if( req instanceof HttpEntityEnclosingRequestBase) {
 			HttpEntityEnclosingRequestBase req2 = (HttpEntityEnclosingRequestBase)req;
-			log.info("Entity: "+req2.getEntity().getContentType()+" "+req2.getEntity().getContentEncoding());
+			log.info("Entity: type="+req2.getEntity().getContentType()+", encoding="+req2.getEntity().getContentEncoding());
 		}
 		
 		try {
@@ -232,13 +266,15 @@ class RestRequestImpl extends RestRequestWithBodyAbstract {
 			
 			RestResponse<String> response = new RestResponseImpl<String>(strResp, resp.getStatusLine().getStatusCode(), resp.getStatusLine().getReasonPhrase());
 			
-			if( resp.getStatusLine().getStatusCode() != expectedStatus && exceptionOnFail ) {
+			if( resp.getStatusLine().getStatusCode() != expectedStatus ) {
 				if( onFailure != null )
 					onFailure.onResponse(response);
 				
-				QuickRestException e = new QuickRestException("Received HTTP Status "+resp.getStatusLine().getStatusCode()+". Expected "+expectedStatus);
-				log.error(e);
-				throw e;
+				if( exceptionOnFail ) {
+					QuickRestException e = new QuickRestException("Received HTTP Status "+resp.getStatusLine().getStatusCode()+". Expected "+expectedStatus);
+					log.error(e);
+					throw e;
+				}
 			}
 			
 			if( onSuccess != null )
@@ -253,6 +289,20 @@ class RestRequestImpl extends RestRequestWithBodyAbstract {
 	@Override
 	public RestRequestWithBody exceptionOnFail(boolean exceptionOnFail) {
 		this.exceptionOnFail=exceptionOnFail;
+		return this;
+	}
+
+
+	@Override
+	public RestRequestWithBody entity(Entity entity) {
+		this.entity=entity;
+		return this;
+	}
+
+	@Override
+	public RestRequestWithBody header(String header, String value, boolean condition) {
+		if( condition )
+			return header(header,value);
 		return this;
 	}
 	

@@ -23,6 +23,20 @@ public interface RestRequest {
 	public RestRequest header(String header, String value);
 	
 	/**
+	 * Set HTTP header and its value if condition is true.
+	 * Example:
+	 * <pre>
+	 *     RestRequest rest = new QuickRest
+	 *         .header("Content-type","application/json",(a==b))
+	 *         .asString();
+	 * </pre>     
+	 * @param header
+	 * @param value
+	 * @return
+	 */
+	public RestRequest header(String header, String value, boolean condition);
+	
+	/**
 	 * Set expected HTTP response code. By default its 200, if not changed by
 	 * {@link QuickRest#expectResponseStatus}
 	 * @param expectedStatus returnet http status code that is recognized as expected

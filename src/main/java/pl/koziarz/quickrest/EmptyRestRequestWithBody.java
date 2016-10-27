@@ -72,6 +72,16 @@ public class EmptyRestRequestWithBody implements RestRequestWithBody {
 		return this;
 	}
 
+	@Override
+	public RestRequestWithBody entity(Entity entity) {
+		return this;
+	}
+
+	@Override
+	public RestRequestWithBody header(String header, String value, boolean condition) {
+		return this;
+	}
+
 	
 
 }
